@@ -1,4 +1,6 @@
 #include <SoftwareSerial.h>
+#include <stdbool.h>
+#include <string.h>
 
 #define ENA 5
 #define IN1 6
@@ -7,7 +9,7 @@
 #define IN3 10
 #define IN4 11
 
-#define DEFAULT_SPEED 150 // adjust as you see fit
+int defaultSpeed = 150; // adjust as you see fit
 
 // can also change the forward and backwards speed with different variables
 
@@ -79,28 +81,45 @@ void setup() {
   setupMotors();
 }
 
+bool speedChange = false;
+String newSpeed = "";
+
 void loop() {
   if (bluetooth.available()) {
     char command = bluetooth.read();
 
-    switch (command) {
-      case 'F':
-        moveForward(DEFAULT_SPEED);
-        break;
-      case 'B':
-        moveBackward(DEFAULT_SPEED);
-        break;
-      case 'L':
-        rotateLeft(DEFAULT_SPEED);
-        break;
-      case 'R':
-        rotateRight(DEFAULT_SPEED);
-        break;
-      case 'S':
-        stopMotors();
-        break;
-        default:
-        break;
+    if(command == '}') {
+      speedChange = false;
+      defaultSpeed = newSpeed.toInt();
+      newSpeed = "";
     }
+
+    if(speedChange == true) {
+      newSpeed.concat(command);
+    }
+    
+    if(command == '{') {
+      speedChange = true;
+    }
+    
+    switch (command) {
+        case 'F':
+          moveForward(defaultSpeed);
+          break;
+        case 'B':
+          moveBackward(defaultSpeed);
+          break;
+        case 'L':
+          rotateLeft(defaultSpeed);
+          break;
+        case 'R':
+          rotateRight(defaultSpeed);
+          break;
+        case 'S':
+          stopMotors();
+          break;
+          default:
+          break;
+      }
   }
 }
