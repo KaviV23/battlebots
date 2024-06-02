@@ -9,8 +9,6 @@
 #define IN3 10
 #define IN4 11
 
-int defaultSpeed = 150; // adjust as you see fit
-
 // can also change the forward and backwards speed with different variables
 
 #define BLUETOOTH_TX 2
@@ -83,72 +81,44 @@ void setup() {
 
 // initialize variables
 String command;
-bool decodeAnalog = false;
-char decodeMode;
-// analog stick values from HC06
-String X = "";
-String Y = "";
+String latestMove;
+int speed = 100;
+static int maxSpeed = 255;
 
 void loop() {
   if (bluetooth.available()) {
-
     command = bluetooth.readStringUntil(']');
-    
-    // convert analog stick input
-    // begin when string starts at X
-    if (command.charAt(0) == 'X') {
-      X = "";
-      Y = "";
-      command.remove(0,1); // remove X
-      while (command.charAt(0) != 'Y') { // move x values into variable
-        X.concat(command.charAt(0));
-        command.remove(0,1); // remove after assigning to variable
-      }
-      if (command.charAt(0) == 'Y') { // same sequence as above for Y ^^
-        command.remove(0,1);
-        while (command.length() != 0) {
-          Y.concat(command.charAt(0));
-          command.remove(0,1);
-        }
-      Serial.println("X: " + X + " Y: " + Y);
-      }
-    }
 
-// TEMP TEMP TEMP
-String tempe;
-    if (Y.toInt() < 225 && Y.toInt() != 177) { // Forward
-      if (X.toInt() < 131) { // Left
-        tempe = 355 - X.toInt();
-        Serial.println("Left " + tempe);
-        rotateLeft(355-X.toInt());
-      } else if (X.toInt() > 224) { // Right
-        tempe = X.toInt();
-        Serial.println("Right " + tempe);
-        rotateRight(X.toInt());
-      } else {
-        tempe = 355 - Y.toInt();
-        Serial.println("Forward " + tempe);
-        moveForward(355-Y.toInt());
+    if (command.charAt(0) == '{') {
+      command.remove(0,1); // remove '{'
+      String speedStr = "";
+      while (command.charAt(0) != '}') {
+        speedStr += command.charAt(0);
+        command.remove(0,1);
       }
-    } else if (Y.toInt() > 224) { // Backward
-      // if (X.toInt() < 130) { // Left Back
-      //   Serial.println("ReverseRight " + tempe);
-      //   rotateRight(355-X.toInt());
-      // } else if (X.toInt() > 224) { // Right Back
-      // tempe = X.toInt();
-      //   Serial.println("ReverseLeft " + tempe);
-      //   rotateLeft(X.toInt());
-      // } else {
-      //   tempe = Y.toInt();
-      //   Serial.println("Backward " + tempe);
-      //   moveBackward(Y.toInt());
-      // }
-      tempe = Y.toInt() - 125;
-      Serial.println("Backward " + tempe);
-      moveBackward(Y.toInt() - 125);
-    } else if (X.toInt() == 177 && Y.toInt() == 177) {
-      Serial.println("Stop");
+      speed = speedStr.toInt();
+      // bluetooth.println(speed);
+    } 
+    // else if (command != String("")) {
+      latestMove = command;
+    // }
+
+    if (latestMove == String('F')) {
+      moveForward(speed);
+      bluetooth.println("FORWARD");
+    } else if (latestMove == String('B')) {
+      moveBackward(speed);
+      bluetooth.println("BACKWARD");
+    } else if (latestMove == String('L')) {
+      rotateLeft(maxSpeed);
+      bluetooth.println("LEFT");
+    } else if (latestMove == String('R')) {
+      rotateRight(maxSpeed);
+      bluetooth.println("RIGHT");
+    } else if (latestMove == String('S')) {
       stopMotors();
+      bluetooth.println("STOP");
     }
+  
   }
 }
