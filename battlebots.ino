@@ -90,18 +90,15 @@ void loop() {
     command = bluetooth.readStringUntil(']');
 
     if (command.charAt(0) == '{') {
-      command.remove(0,1); // remove '{'
+      command.remove(0,1);
       String speedStr = "";
       while (command.charAt(0) != '}') {
         speedStr += command.charAt(0);
         command.remove(0,1);
       }
       speed = speedStr.toInt();
-      // bluetooth.println(speed);
     } 
-    // else if (command != String("")) {
-      latestMove = command;
-    // }
+    latestMove = command;
 
     if (latestMove == String('F')) {
       moveForward(speed);
