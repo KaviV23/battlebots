@@ -9,8 +9,6 @@
 #define IN3 10
 #define IN4 11
 
-int defaultSpeed = 150; // adjust as you see fit
-
 // can also change the forward and backwards speed with different variables
 
 #define BLUETOOTH_TX 2
@@ -81,45 +79,46 @@ void setup() {
   setupMotors();
 }
 
-bool speedChange = false;
-String newSpeed = "";
+// initialize variables
+String command;
+String latestMove;
+int speed = 100;
+static int maxSpeed = 255;
 
 void loop() {
   if (bluetooth.available()) {
-    char command = bluetooth.read();
+    command = bluetooth.readStringUntil(']');
 
-    if(command == '}') {
-      speedChange = false;
-      defaultSpeed = newSpeed.toInt();
-      newSpeed = "";
-    }
-
-    if(speedChange == true) {
-      newSpeed.concat(command);
-    }
-    
-    if(command == '{') {
-      speedChange = true;
-    }
-    
-    switch (command) {
-        case 'F':
-          moveForward(defaultSpeed);
-          break;
-        case 'B':
-          moveBackward(defaultSpeed);
-          break;
-        case 'L':
-          rotateLeft(defaultSpeed);
-          break;
-        case 'R':
-          rotateRight(defaultSpeed);
-          break;
-        case 'S':
-          stopMotors();
-          break;
-          default:
-          break;
+    if (command.charAt(0) == '{') {
+      command.remove(0,1); // remove '{'
+      String speedStr = "";
+      while (command.charAt(0) != '}') {
+        speedStr += command.charAt(0);
+        command.remove(0,1);
       }
+      speed = speedStr.toInt();
+      // bluetooth.println(speed);
+    } 
+    // else if (command != String("")) {
+      latestMove = command;
+    // }
+
+    if (latestMove == String('F')) {
+      moveForward(speed);
+      bluetooth.println("FORWARD");
+    } else if (latestMove == String('B')) {
+      moveBackward(speed);
+      bluetooth.println("BACKWARD");
+    } else if (latestMove == String('L')) {
+      rotateLeft(maxSpeed);
+      bluetooth.println("LEFT");
+    } else if (latestMove == String('R')) {
+      rotateRight(maxSpeed);
+      bluetooth.println("RIGHT");
+    } else if (latestMove == String('S')) {
+      stopMotors();
+      bluetooth.println("STOP");
+    }
+  
   }
 }
